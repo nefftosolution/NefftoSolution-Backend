@@ -45,6 +45,8 @@ const blogSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, index: true },
     excerpt: { type: String, default: '' },
     content: { type: String, default: '' },
+    customCss: { type: String, default: '' },
+    layoutMode: { type: String, enum: ['standard', 'custom-page'], default: 'standard' },
     coverImage: { type: String, default: '' },
     category: { type: String, default: 'Technology', index: true },
     tags: [{ type: String }],
@@ -295,6 +297,8 @@ class BlogStore {
         keywords: data.seo?.keywords || ''
       },
       content: data.content || '',
+      customCss: data.customCss || '',
+      layoutMode: data.layoutMode === 'custom-page' ? 'custom-page' : 'standard',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -348,6 +352,8 @@ class BlogStore {
           existing.featured = data.featured !== undefined ? Boolean(data.featured) : existing.featured;
           existing.seo = { ...existing.seo, ...(data.seo || {}) };
           existing.content = data.content !== undefined ? data.content : existing.content;
+          existing.customCss = data.customCss !== undefined ? data.customCss : existing.customCss;
+          existing.layoutMode = data.layoutMode !== undefined ? data.layoutMode : (existing.layoutMode || 'standard');
           existing.updatedAt = new Date();
 
           await existing.save();
@@ -387,6 +393,8 @@ class BlogStore {
         featured: data.featured !== undefined ? Boolean(data.featured) : existing.featured,
         seo: { ...existing.seo, ...(data.seo || {}) },
         content: data.content !== undefined ? data.content : existing.content,
+        customCss: data.customCss !== undefined ? data.customCss : (existing.customCss || ''),
+        layoutMode: data.layoutMode !== undefined ? data.layoutMode : (existing.layoutMode || 'standard'),
         updatedAt: new Date().toISOString()
       };
 
