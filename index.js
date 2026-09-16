@@ -19,8 +19,21 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
 
 const app = express();
 
-// Enable CORS for all origins
-app.use(cors());
+// Enable CORS for all origins and headers
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+    ],
+  })
+);
+app.options('*', cors());
 
 // Parse JSON and urlencoded with generous limits for rich blog content
 app.use(express.json({ limit: '25mb' }));
