@@ -84,28 +84,34 @@ try {
   BlogModel = mongoose.model('Blog', blogSchema);
 }
 
+const ATLAS_URI =
+  process.env.MONGODB_URI ||
+  'mongodb+srv://nefftosolution_db_user:wMJ3Z37Am8T4yeiX@cluster0.qebjevz.mongodb.net/neffto?retryWrites=true&w=majority&appName=Cluster0';
+
 class BlogStore {
   constructor() {
     this.isMongoConnected = false;
     this.ensureInitialized();
-    this.initMongo();
+    this.ensureConnected();
   }
 
-  async initMongo() {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      console.log('ℹ️ MONGODB_URI not set. Using local JSON store.');
-      return;
+  async ensureConnected() {
+    if (mongoose.connection.readyState === 1) {
+      this.isMongoConnected = true;
+      return true;
     }
 
     try {
-      await mongoose.connect(uri);
+      await mongoose.connect(ATLAS_URI, {
+        serverSelectionTimeoutMS: 10000,
+      });
       this.isMongoConnected = true;
       console.log('✅ Connected to MongoDB Atlas successfully!');
+      return true;
     } catch (err) {
-      console.warn('⚠️ MongoDB Atlas connection notice:', err.message);
-      console.log('ℹ️ Falling back to local JSON store.');
+      console.warn('⚠️ MongoDB Atlas connection error:', err.message);
       this.isMongoConnected = false;
+      return false;
     }
   }
 
@@ -142,6 +148,7 @@ class BlogStore {
   }
 
   async getAll({ status, category, search, limit, page }) {
+    await this.ensureConnected();
     if (this.isMongoConnected) {
       try {
         const query = {};
@@ -215,6 +222,7 @@ class BlogStore {
   }
 
   async getBySlug(slug) {
+    await this.ensureConnected();
     const cleanSlug = (slug || '').toLowerCase().trim();
 
     if (this.isMongoConnected) {
@@ -233,6 +241,7 @@ class BlogStore {
   }
 
   async getById(id) {
+    await this.ensureConnected();
     if (this.isMongoConnected) {
       try {
         const doc = await BlogModel.findOne({ id });
@@ -247,6 +256,7 @@ class BlogStore {
   }
 
   async create(data) {
+    await this.ensureConnected();
     const blogs = this.readBlogs();
     let baseSlug = slugify(data.slug || data.title || 'untitled-post');
     let uniqueSlug = baseSlug;
@@ -309,6 +319,7 @@ class BlogStore {
   }
 
   async update(id, data) {
+    await this.ensureConnected();
     let updatedBlog = null;
 
     if (this.isMongoConnected) {
@@ -388,6 +399,7 @@ class BlogStore {
   }
 
   async delete(id) {
+    await this.ensureConnected();
     let success = false;
 
     if (this.isMongoConnected) {

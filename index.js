@@ -9,13 +9,15 @@ const cloudinary = require('cloudinary').v2;
 const blogStore = require('./services/blogStore');
 
 // Configure Cloudinary
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'bs1joehj';
+const apiKey = process.env.CLOUDINARY_API_KEY || '461665138218553';
+const apiSecret = process.env.CLOUDINARY_API_SECRET || 'Hxcfi1B4Y3HZh1FrdghMKy9O3vc';
+
+cloudinary.config({
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
+});
 
 const app = express();
 
@@ -383,6 +385,30 @@ app.post('/api/upload', (req, res) => {
     }
 
     return res.status(400).json({ message: 'No file or image data provided' });
+  });
+});
+
+// Admin Authentication Endpoint
+app.post('/api/admin/auth', (req, res) => {
+  const { password } = req.body || {};
+  const validPassword = process.env.ADMIN_PASSWORD || 'neffto@admin2026';
+
+  if (password === validPassword) {
+    const token = `admin-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    return res.json({
+      success: true,
+      token,
+      user: {
+        name: 'Neffto Admin',
+        role: 'superadmin',
+        email: 'admin@nefftosolution.com',
+      },
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    message: 'Invalid admin security credentials',
   });
 });
 
